@@ -1,0 +1,2594 @@
+<html lang="zh-CN"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>吉隆坡民宿管理系统</title>
+    <!-- Tailwind CSS v3 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://cdn.jsdelivr.net/npm/lucide@0.544.0/dist/umd/lucide.min.js"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+    <!-- 统一的 Tailwind 配置 -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3b82f6', // 蓝色
+                        secondary: '#f97316', // 橙色
+                        success: '#22c55e', // 绿色
+                        warning: '#eab308', // 黄色
+                        danger: '#ef4444', // 红色
+                        info: '#0ea5e9', // 浅蓝色
+                        light: '#f3f4f6', // 浅灰色
+                        dark: '#1f2937', // 深灰色
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .transition-all {
+                transition-property: all;
+                transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+                transition-duration: 150ms;
+            }
+            .shadow-card {
+                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            }
+            .bg-gradient-blue {
+                background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            }
+            .bg-gradient-orange {
+                background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+            }
+            .bg-gradient-green {
+                background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+            }
+            .bg-gradient-purple {
+                background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 font-sans">
+    <div class="min-h-screen flex flex-col md:flex-row">
+        <!-- 侧边导航栏 -->
+        <aside class="w-full md:w-64 bg-white shadow-lg md:min-h-screen">
+            <div class="p-4 bg-gradient-blue text-white">
+                <div class="flex items-center space-x-3">
+                    <i data-lucide="home" class="w-8 h-8"></i>
+                    <h1 class="text-xl font-bold">吉隆坡民宿管理</h1>
+                </div>
+            </div>
+            <nav class="mt-6">
+                <ul>
+                    <li>
+                        <a href="#dashboard" class="flex items-center px-6 py-3 text-gray-700 bg-gray-100 hover:bg-gray-200 transition-all" onclick="showTab('dashboard')">
+                            <i data-lucide="layout-dashboard" class="w-5 h-5 mr-3"></i>
+                            <span style="font-weight: bold;">数据大屏</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#rooms" class="flex items-center px-6 py-3 text-gray-700 hover:bg-gray-100 transition-all" onclick="showTab('rooms')">
+                            <i data-lucide="bed" class="w-5 h-5 mr-3"></i>
+                            <span>房源管理</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#bookings" class="flex items-center px-6 py-3 text-gray-700 hover:bg-gray-100 transition-all" onclick="showTab('bookings')">
+                            <i data-lucide="calendar" class="w-5 h-5 mr-3"></i>
+                            <span>入住管理</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#statistics" class="flex items-center px-6 py-3 text-gray-700 hover:bg-gray-100 transition-all" onclick="showTab('statistics')">
+                            <i data-lucide="bar-chart-3" class="w-5 h-5 mr-3"></i>
+                            <span>统计分析</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#settings" class="flex items-center px-6 py-3 text-gray-700 hover:bg-gray-100 transition-all" onclick="showTab('settings')">
+                            <i data-lucide="settings" class="w-5 h-5 mr-3"></i>
+                            <span>设置</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- 主内容区 -->
+        <main class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50">
+            <!-- 顶部状态栏 -->
+            <header class="bg-white shadow-sm">
+                <div class="flex items-center justify-between px-6 py-4">
+                    <div class="flex items-center">
+                        <button id="menu-toggle" class="mr-4 text-gray-600 md:hidden">
+                            <i data-lucide="menu" class="w-6 h-6"></i>
+                        </button>
+                        <h2 id="page-title" class="text-xl font-semibold text-gray-800">数据大屏</h2>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <div class="relative">
+                            <button class="flex items-center text-gray-600 hover:text-gray-800">
+                                <i data-lucide="bell" class="w-6 h-6"></i>
+                                <span class="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full"></span>
+                            </button>
+                        </div>
+                        <div class="relative">
+                            <button class="flex items-center space-x-2">
+                                <div class="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center">
+                                    <i data-lucide="user" class="w-5 h-5 text-gray-600"></i>
+                                </div>
+                                <span class="text-sm font-medium text-gray-700">管理员</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- 页面内容 -->
+            <div class="p-6">
+                <!-- 仪表盘 -->
+                <div id="dashboard-tab" class="tab-content">
+                    <!-- 欢迎卡片 -->
+                    <div class="mb-6 bg-white rounded-lg shadow-md overflow-hidden">
+                        <div class="relative h-48">
+                            <img src="https://p3-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/c8cf16510a3449b3bd3d6b42bcb33eaa~tplv-a9rns2rl98-image.image?rcl=20251228015708A98A062FE083DD5A721B&amp;rk3s=8e244e95&amp;rrcfp=f06b921b&amp;x-expires=1769450251&amp;x-signature=w4y4npslF75gTs5jM6f2TsnRAs4%3D" alt="吉隆坡城市风光" class="w-full h-full object-cover">
+                            <div class="absolute inset-0 bg-gradient-to-r from-blue-900/70 to-transparent flex items-center">
+                                <div class="p-6 text-white">
+                                    <h2 class="text-2xl font-bold mb-2">欢迎回来，管理员</h2>
+                                    <p class="text-blue-100">今天是 <span id="current-date"></span>，祝您有愉快的一天！</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 统计卡片 -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+                        <!-- 总房源 -->
+                        <div class="bg-white rounded-lg shadow-md p-6">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-sm font-medium text-gray-600">总房源</p>
+                                    <p class="text-2xl font-bold text-gray-800" id="total-rooms">12</p>
+                                </div>
+                                <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
+                                    <i data-lucide="home" class="w-6 h-6 text-blue-600"></i>
+                                </div>
+                            </div>
+                            <div class="mt-4">
+                                <div class="flex items-center">
+                                    <span class="text-green-500 text-sm font-medium flex items-center">
+                                        <i data-lucide="trending-up" class="w-4 h-4 mr-1"></i>
+                                        5%
+                                    </span>
+                                    <span class="text-gray-500 text-sm ml-2">较上月</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 已预订 -->
+                        <div class="bg-white rounded-lg shadow-md p-6">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-sm font-medium text-gray-600">已预订</p>
+                                    <p class="text-2xl font-bold text-gray-800" id="booked-rooms">5</p>
+                                </div>
+                                <div class="w-12 h-12 rounded-full bg-orange-100 flex items-center justify-center">
+                                    <i data-lucide="calendar" class="w-6 h-6 text-orange-600"></i>
+                                </div>
+                            </div>
+                            <div class="mt-4">
+                                <div class="flex items-center">
+                                    <span class="text-green-500 text-sm font-medium flex items-center">
+                                        <i data-lucide="trending-up" class="w-4 h-4 mr-1"></i>
+                                        12%
+                                    </span>
+                                    <span class="text-gray-500 text-sm ml-2">较上月</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 入住中 -->
+                        <div class="bg-white rounded-lg shadow-md p-6">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-sm font-medium text-gray-600">入住中</p>
+                                    <p class="text-2xl font-bold text-gray-800" id="occupied-rooms">3</p>
+                                </div>
+                                <div class="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center">
+                                    <i data-lucide="users" class="w-6 h-6 text-green-600"></i>
+                                </div>
+                            </div>
+                            <div class="mt-4">
+                                <div class="flex items-center">
+                                    <span class="text-red-500 text-sm font-medium flex items-center">
+                                        <i data-lucide="trending-down" class="w-4 h-4 mr-1"></i>
+                                        3%
+                                    </span>
+                                    <span class="text-gray-500 text-sm ml-2">较上月</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 本月收入 -->
+                        <div class="bg-white rounded-lg shadow-md p-6">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-sm font-medium text-gray-600">本月收入</p>
+                                    <p class="text-2xl font-bold text-gray-800" id="monthly-revenue">¥15,280</p>
+                                </div>
+                                <div class="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center">
+                                    <i data-lucide="dollar-sign" class="w-6 h-6 text-purple-600"></i>
+                                </div>
+                            </div>
+                            <div class="mt-4">
+                                <div class="flex items-center">
+                                    <span class="text-green-500 text-sm font-medium flex items-center">
+                                        <i data-lucide="trending-up" class="w-4 h-4 mr-1"></i>
+                                        8%
+                                    </span>
+                                    <span class="text-gray-500 text-sm ml-2">较上月</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 图表和数据 -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <!-- 收入趋势图 -->
+                        <div class="bg-white rounded-lg shadow-md p-6">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-4">收入趋势</h3>
+                            <div class="h-80">
+                                <canvas id="revenue-chart"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- 房源状态分布 -->
+                        <div class="bg-white rounded-lg shadow-md p-6">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-4">房源状态分布</h3>
+                            <div class="h-80">
+                                <canvas id="room-status-chart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 最近预订 -->
+                    <div class="mt-6 bg-white rounded-lg shadow-md p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-lg font-semibold text-gray-800">最近预订</h3>
+                            <a href="#bookings" class="text-blue-600 hover:text-blue-800 text-sm font-medium" onclick="showTab('bookings')">查看全部</a>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead>
+                                    <tr>
+                                        <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">订单号</th>
+                                        <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">房号</th>
+                                        <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">房型</th>
+                                        <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">租赁模式</th>
+                                        <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">房间大小</th>
+                                        <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">入住人</th>
+                                        <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">入住日期</th>
+                                        <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">退房日期</th>
+                                        <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">状态</th>
+                                        <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">金额</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-200" id="recent-bookings">
+                                    <!-- 最近预订数据将通过JavaScript动态填充 -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 房源管理 -->
+                <div id="rooms-tab" class="tab-content hidden">
+                    <div class="mb-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <h2 class="text-2xl font-bold text-gray-800">房源管理</h2>
+                            <button class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md flex items-center" onclick="showAddRoomModal()">
+                                <i data-lucide="plus" class="w-4 h-4 mr-2"></i>
+                                添加房源
+                            </button>
+                        </div>
+
+                        <!-- 筛选和搜索 -->
+                        <div class="bg-white p-4 rounded-lg shadow-md mb-6">
+                            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">房型</label>
+                                    <select class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        <option value="">全部</option>
+                                        <option value="single">单人间</option>
+                                        <option value="double">双人间</option>
+                                        <option value="suite">套房</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">状态</label>
+                                    <select class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        <option value="">全部</option>
+                                        <option value="available">空闲</option>
+                                        <option value="booked">已预订</option>
+                                        <option value="occupied">已入住</option>
+                                        <option value="maintenance">维护中</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">价格范围</label>
+                                    <div class="flex items-center space-x-2">
+                                        <input type="number" placeholder="最低" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        <span>-</span>
+                                        <input type="number" placeholder="最高" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">搜索</label>
+                                    <div class="relative">
+                                        <input type="text" placeholder="搜索房号或描述..." class="w-full border border-gray-300 rounded-md pl-10 pr-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        <i data-lucide="search" class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 房源列表 -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="rooms-container">
+                            <!-- 房源卡片将通过JavaScript动态填充 -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 入住管理 -->
+                <div id="bookings-tab" class="tab-content hidden">
+                    <div class="mb-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <h2 class="text-2xl font-bold text-gray-800">入住管理</h2>
+                            <button class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md flex items-center" onclick="showAddBookingModal()">
+                                <i data-lucide="plus" class="w-4 h-4 mr-2"></i>
+                                新增预订
+                            </button>
+                        </div>
+
+                        <!-- 筛选和搜索 -->
+                        <div class="bg-white p-4 rounded-lg shadow-md mb-6">
+                            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">状态</label>
+                                    <select class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        <option value="">全部</option>
+                                        <option value="upcoming">即将入住</option>
+                                        <option value="current">当前入住</option>
+                                        <option value="completed">已完成</option>
+                                        <option value="cancelled">已取消</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">日期范围</label>
+                                    <div class="flex items-center space-x-2">
+                                        <input type="date" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        <span>-</span>
+                                        <input type="date" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">房号</label>
+                                    <select class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        <option value="">全部</option>
+                                        <!-- 房号选项将通过JavaScript动态填充 -->
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">搜索</label>
+                                    <div class="relative">
+                                        <input type="text" placeholder="搜索入住人或订单号..." class="w-full border border-gray-300 rounded-md pl-10 pr-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        <i data-lucide="search" class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 预订列表 -->
+                        <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full divide-y divide-gray-200">
+                                    <thead>
+                                        <tr>
+                                            <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">订单号</th>
+                                            <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">房号</th>
+                                            <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">入住人</th>
+                                            <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">联系电话</th>
+                                            <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">入住日期</th>
+                                            <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">退房日期</th>
+                                            <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">晚数</th>
+                                            <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">金额</th>
+                                            <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">状态</th>
+                                            <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="bg-white divide-y divide-gray-200" id="bookings-container">
+                                        <!-- 预订数据将通过JavaScript动态填充 -->
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="px-6 py-4 border-t border-gray-200">
+                                <div class="flex items-center justify-between">
+                                    <div class="text-sm text-gray-700">
+                                        显示 <span class="font-medium">1</span> 到 <span class="font-medium">10</span> 共 <span class="font-medium">25</span> 条记录
+                                    </div>
+                                    <div class="flex space-x-2">
+                                        <button class="px-3 py-1 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50" disabled="">
+                                            上一页
+                                        </button>
+                                        <button class="px-3 py-1 border border-gray-300 rounded-md text-sm font-medium bg-blue-50 text-blue-600">
+                                            1
+                                        </button>
+                                        <button class="px-3 py-1 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">
+                                            2
+                                        </button>
+                                        <button class="px-3 py-1 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">
+                                            3
+                                        </button>
+                                        <button class="px-3 py-1 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">
+                                            下一页
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 统计分析 -->
+                <div id="statistics-tab" class="tab-content hidden">
+                    <div class="mb-6">
+                        <h2 class="text-2xl font-bold text-gray-800 mb-4">统计分析</h2>
+
+                        <!-- 日期范围选择 -->
+                        <div class="bg-white p-4 rounded-lg shadow-md mb-6">
+                            <div class="flex flex-wrap items-center gap-4">
+                                <div class="flex items-center space-x-2">
+                                    <span class="text-sm font-medium text-gray-700">日期范围:</span>
+                                    <input type="date" class="border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <span>至</span>
+                                    <input type="date" class="border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <button class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium">
+                                        应用
+                                    </button>
+                                    <button class="border border-gray-300 text-gray-700 hover:bg-gray-50 px-4 py-2 rounded-md text-sm font-medium">
+                                        重置
+                                    </button>
+                                </div>
+                                <div class="flex items-center space-x-2 ml-auto">
+                                    <button class="border border-gray-300 text-gray-700 hover:bg-gray-50 px-3 py-1 rounded-md text-sm font-medium">
+                                        今日
+                                    </button>
+                                    <button class="border border-gray-300 text-gray-700 hover:bg-gray-50 px-3 py-1 rounded-md text-sm font-medium">
+                                        本周
+                                    </button>
+                                    <button class="border border-gray-300 text-gray-700 hover:bg-gray-50 px-3 py-1 rounded-md text-sm font-medium">
+                                        本月
+                                    </button>
+                                    <button class="border border-gray-300 text-gray-700 hover:bg-gray-50 px-3 py-1 rounded-md text-sm font-medium">
+                                        本年
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 统计卡片 -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+                            <div class="bg-white rounded-lg shadow-md p-6">
+                                <p class="text-sm font-medium text-gray-600 mb-1">总收入</p>
+                                <p class="text-2xl font-bold text-gray-800 mb-2">¥85,280</p>
+                                <div class="flex items-center">
+                                    <span class="text-green-500 text-sm font-medium flex items-center">
+                                        <i data-lucide="trending-up" class="w-4 h-4 mr-1"></i>
+                                        12.5%
+                                    </span>
+                                    <span class="text-gray-500 text-sm ml-2">较上期</span>
+                                </div>
+                            </div>
+                            <div class="bg-white rounded-lg shadow-md p-6">
+                                <p class="text-sm font-medium text-gray-600 mb-1">总预订数</p>
+                                <p class="text-2xl font-bold text-gray-800 mb-2">48</p>
+                                <div class="flex items-center">
+                                    <span class="text-green-500 text-sm font-medium flex items-center">
+                                        <i data-lucide="trending-up" class="w-4 h-4 mr-1"></i>
+                                        8.2%
+                                    </span>
+                                    <span class="text-gray-500 text-sm ml-2">较上期</span>
+                                </div>
+                            </div>
+                            <div class="bg-white rounded-lg shadow-md p-6">
+                                <p class="text-sm font-medium text-gray-600 mb-1">平均入住率</p>
+                                <p class="text-2xl font-bold text-gray-800 mb-2">78%</p>
+                                <div class="flex items-center">
+                                    <span class="text-red-500 text-sm font-medium flex items-center">
+                                        <i data-lucide="trending-down" class="w-4 h-4 mr-1"></i>
+                                        2.1%
+                                    </span>
+                                    <span class="text-gray-500 text-sm ml-2">较上期</span>
+                                </div>
+                            </div>
+                            <div class="bg-white rounded-lg shadow-md p-6">
+                                <p class="text-sm font-medium text-gray-600 mb-1">平均房价</p>
+                                <p class="text-2xl font-bold text-gray-800 mb-2">¥380</p>
+                                <div class="flex items-center">
+                                    <span class="text-green-500 text-sm font-medium flex items-center">
+                                        <i data-lucide="trending-up" class="w-4 h-4 mr-1"></i>
+                                        5.3%
+                                    </span>
+                                    <span class="text-gray-500 text-sm ml-2">较上期</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 图表 -->
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                            <!-- 收入趋势图 -->
+                            <div class="bg-white rounded-lg shadow-md p-6">
+                                <h3 class="text-lg font-semibold text-gray-800 mb-4">收入趋势</h3>
+                                <div class="h-80">
+                                    <canvas id="statistics-revenue-chart"></canvas>
+                                </div>
+                            </div>
+
+                            <!-- 入住率趋势图 -->
+                            <div class="bg-white rounded-lg shadow-md p-6">
+                                <h3 class="text-lg font-semibold text-gray-800 mb-4">入住率趋势</h3>
+                                <div class="h-80">
+                                    <canvas id="occupancy-chart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                            <!-- 房型收入对比 -->
+                            <div class="bg-white rounded-lg shadow-md p-6">
+                                <h3 class="text-lg font-semibold text-gray-800 mb-4">房型收入对比</h3>
+                                <div class="h-80">
+                                    <canvas id="room-type-revenue-chart"></canvas>
+                                </div>
+                            </div>
+
+                            <!-- 月度预订量 -->
+                            <div class="bg-white rounded-lg shadow-md p-6">
+                                <h3 class="text-lg font-semibold text-gray-800 mb-4">月度预订量</h3>
+                                <div class="h-80">
+                                    <canvas id="monthly-bookings-chart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 热门房源 -->
+                        <div class="bg-white rounded-lg shadow-md p-6">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-4">热门房源</h3>
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full divide-y divide-gray-200">
+                                    <thead>
+                                        <tr>
+                                            <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">房号</th>
+                                            <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">房型</th>
+                                            <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">预订次数</th>
+                                            <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">入住率</th>
+                                            <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">总收入</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="bg-white divide-y divide-gray-200">
+                                        <tr>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="text-sm font-medium text-gray-900">101</div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="text-sm text-gray-900">套房</div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="text-sm text-gray-900">12</div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="text-sm text-gray-900">92%</div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="text-sm text-gray-900">¥15,600</div>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="text-sm font-medium text-gray-900">203</div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="text-sm text-gray-900">双人间</div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="text-sm text-gray-900">10</div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="text-sm text-gray-900">85%</div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="text-sm text-gray-900">¥10,800</div>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="text-sm font-medium text-gray-900">302</div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="text-sm text-gray-900">双人间</div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="text-sm text-gray-900">9</div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="text-sm text-gray-900">78%</div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="text-sm text-gray-900">¥9,720</div>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="text-sm font-medium text-gray-900">105</div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="text-sm text-gray-900">单人间</div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="text-sm text-gray-900">8</div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="text-sm text-gray-900">75%</div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="text-sm text-gray-900">¥6,400</div>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="text-sm font-medium text-gray-900">201</div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="text-sm text-gray-900">套房</div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="text-sm text-gray-900">7</div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="text-sm text-gray-900">68%</div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="text-sm text-gray-900">¥9,100</div>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 设置 -->
+                <div id="settings-tab" class="tab-content hidden">
+                    <div class="mb-6">
+                        <h2 class="text-2xl font-bold text-gray-800 mb-4">系统设置</h2>
+
+                        <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                            <div class="border-b border-gray-200">
+                                <nav class="flex -mb-px">
+                                    <button class="border-b-2 border-blue-500 text-blue-600 px-6 py-4 text-sm font-medium">
+                                        基本设置
+                                    </button>
+                                    <button class="border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 px-6 py-4 text-sm font-medium">
+                                        通知设置
+                                    </button>
+                                    <button class="border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 px-6 py-4 text-sm font-medium">
+                                        用户管理
+                                    </button>
+                                    <button class="border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 px-6 py-4 text-sm font-medium">
+                                        数据备份
+                                    </button>
+                                </nav>
+                            </div>
+
+                            <div class="p-6">
+                                <div class="max-w-3xl">
+                                    <div class="mb-6">
+                                        <h3 class="text-lg font-medium text-gray-900 mb-4">民宿信息</h3>
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-1">民宿名称</label>
+                                                <input type="text" value="吉隆坡精品民宿" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                            </div>
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-1">联系电话</label>
+                                                <input type="text" value="+60 12-345 6789" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                            </div>
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-1">电子邮箱</label>
+                                                <input type="email" value="info@klhomestay.com" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                            </div>
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-1">地址</label>
+                                                <input type="text" value="吉隆坡市中心，马来西亚" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-6">
+                                        <h3 class="text-lg font-medium text-gray-900 mb-4">系统设置</h3>
+                                        <div class="space-y-4">
+                                            <div class="flex items-center justify-between">
+                                                <div>
+                                                    <h4 class="text-sm font-medium text-gray-900">自动确认预订</h4>
+                                                    <p class="text-sm text-gray-500">开启后，预订请求将自动确认</p>
+                                                </div>
+                                                <button type="button" class="relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 bg-blue-600" role="switch" aria-checked="true">
+                                                    <span class="sr-only">自动确认预订</span>
+                                                    <span aria-hidden="true" class="pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200 translate-x-5"></span>
+                                                </button>
+                                            </div>
+                                            <div class="flex items-center justify-between">
+                                                <div>
+                                                    <h4 class="text-sm font-medium text-gray-900">清洁提醒</h4>
+                                                    <p class="text-sm text-gray-500">退房后自动发送清洁提醒</p>
+                                                </div>
+                                                <button type="button" class="relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 bg-blue-600" role="switch" aria-checked="true">
+                                                    <span class="sr-only">清洁提醒</span>
+                                                    <span aria-hidden="true" class="pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200 translate-x-5"></span>
+                                                </button>
+                                            </div>
+                                            <div class="flex items-center justify-between">
+                                                <div>
+                                                    <h4 class="text-sm font-medium text-gray-900">自动备份</h4>
+                                                    <p class="text-sm text-gray-500">每天自动备份系统数据</p>
+                                                </div>
+                                                <button type="button" class="relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 bg-gray-200" role="switch" aria-checked="false">
+                                                    <span class="sr-only">自动备份</span>
+                                                    <span aria-hidden="true" class="pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200 translate-x-0"></span>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="flex justify-end">
+                                        <button class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium">
+                                            保存设置
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- 添加房源模态框 -->
+    <div id="add-room-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl">
+            <div class="flex items-center justify-between p-6 border-b border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-900">添加房源</h3>
+                <button onclick="hideAddRoomModal()" class="text-gray-400 hover:text-gray-500">
+                    <i data-lucide="x" class="w-6 h-6"></i>
+                </button>
+            </div>
+            <div class="p-6">
+                <form id="add-room-form">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">房源编号</label>
+                            <input type="text" name="roomNumber" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required="">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">房型</label>
+                            <select name="type" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required="">
+                                <option value="">请选择房型</option>
+                                <option value="1-bedroom">1室</option>
+                                <option value="2-bedroom">2室</option>
+                                <option value="3-bedroom">3室</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">价格 (马币/晚)</label>
+                            <input type="number" name="price" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required="">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">可容纳人数</label>
+                            <input type="number" name="capacity" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required="">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">可入住起始日期</label>
+                            <input type="date" name="availableFrom" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required="">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">状态</label>
+                            <select name="status" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required="">
+                                <option value="available">空闲</option>
+                                <option value="booked">已预订</option>
+                                <option value="occupied">已入住</option>
+                                <option value="maintenance">维护中</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">配套设施</label>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                            <div class="flex items-center">
+                                <input type="checkbox" id="wifi" name="amenities" value="wifi" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                                <label for="wifi" class="ml-2 text-sm text-gray-700">WiFi</label>
+                            </div>
+                            <div class="flex items-center">
+                                <input type="checkbox" id="aircon" name="amenities" value="aircon" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                                <label for="aircon" class="ml-2 text-sm text-gray-700">空调</label>
+                            </div>
+                            <div class="flex items-center">
+                                <input type="checkbox" id="tv" name="amenities" value="tv" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                                <label for="tv" class="ml-2 text-sm text-gray-700">电视</label>
+                            </div>
+                            <div class="flex items-center">
+                                <input type="checkbox" id="refrigerator" name="amenities" value="refrigerator" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                                <label for="refrigerator" class="ml-2 text-sm text-gray-700">冰箱</label>
+                            </div>
+                            <div class="flex items-center">
+                                <input type="checkbox" id="microwave" name="amenities" value="microwave" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                                <label for="microwave" class="ml-2 text-sm text-gray-700">微波炉</label>
+                            </div>
+                            <div class="flex items-center">
+                                <input type="checkbox" id="washing-machine" name="amenities" value="washing-machine" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                                <label for="washing-machine" class="ml-2 text-sm text-gray-700">洗衣机</label>
+                            </div>
+                            <div class="flex items-center">
+                                <input type="checkbox" id="hairdryer" name="amenities" value="hairdryer" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                                <label for="hairdryer" class="ml-2 text-sm text-gray-700">吹风机</label>
+                            </div>
+                            <div class="flex items-center">
+                                <input type="checkbox" id="iron" name="amenities" value="iron" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                                <label for="iron" class="ml-2 text-sm text-gray-700">熨斗</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">房源描述</label>
+                        <textarea name="description" rows="4" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">照片上传</label>
+                        <div class="flex items-center justify-center w-full">
+                            <label class="flex flex-col w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50">
+                                <div class="flex flex-col items-center justify-center pt-7">
+                                    <i data-lucide="upload-cloud" class="w-10 h-10 text-gray-400"></i>
+                                    <p class="pt-1 text-sm text-gray-600">点击或拖拽文件至此处上传</p>
+                                    <p class="text-xs text-gray-500">支持 PNG, JPG, GIF 格式</p>
+                                </div>
+                                <input type="file" class="hidden" name="photos" multiple="" accept="image/*">
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">视频链接</label>
+                        <input type="url" name="videoUrl" placeholder="https://example.com/video.mp4" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div class="flex justify-end space-x-3">
+                        <button type="button" onclick="hideAddRoomModal()" class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">
+                            取消
+                        </button>
+                        <button type="submit" class="px-4 py-2 bg-blue-600 border border-transparent rounded-md text-sm font-medium text-white hover:bg-blue-700">
+                            保存
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- 添加预订模态框 -->
+    <div id="add-booking-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl">
+            <div class="flex items-center justify-between p-6 border-b border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-900">新增预订</h3>
+                <button onclick="hideAddBookingModal()" class="text-gray-400 hover:text-gray-500">
+                    <i data-lucide="x" class="w-6 h-6"></i>
+                </button>
+            </div>
+            <div class="p-6">
+                <form id="add-booking-form">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">房号</label>
+                            <select name="roomId" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required="">
+                                <option value="">请选择房号</option>
+                                <!-- 房号选项将通过JavaScript动态填充 -->
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">租赁模式</label>
+                            <select name="rentalMode" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required="">
+                                <option value="整租">整租</option>
+                                <option value="合租">合租</option>
+                            </select>
+                        </div>
+                        <div id="roomSizeDiv" class="hidden">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">房间大小</label>
+                            <select name="roomSize" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="">请选择</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">入住人姓名</label>
+                            <input type="text" name="guestName" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required="">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">联系电话</label>
+                            <input type="text" name="contactNumber" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required="">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">证件类型</label>
+                            <select name="idType" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required="">
+                                <option value="">请选择证件类型</option>
+                                <option value="passport">护照</option>
+                                <option value="id-card">身份证</option>
+                                <option value="driver-license">驾照</option>
+                                <option value="other">其他</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">证件号码</label>
+                            <input type="text" name="idNumber" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required="">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">入住日期</label>
+                            <input type="date" name="checkInDate" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required="">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">退房日期</label>
+                            <input type="date" name="checkOutDate" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required="">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">押金金额 (马币)</label>
+                            <input type="number" name="deposit" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="0">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">付款方式</label>
+                            <select name="paymentMethod" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required="">
+                                <option value="one-time">一次性付款</option>
+                                <option value="monthly">月付</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">支付状态</label>
+                            <select name="paymentStatus" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required="">
+                                <option value="paid">已支付</option>
+                                <option value="partial">部分支付</option>
+                                <option value="unpaid">未支付</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">特殊要求</label>
+                        <textarea name="specialRequests" rows="3" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+                    </div>
+                    <div class="flex justify-end space-x-3">
+                        <button type="button" onclick="hideAddBookingModal()" class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">
+                            取消
+                        </button>
+                        <button type="submit" class="px-4 py-2 bg-blue-600 border border-transparent rounded-md text-sm font-medium text-white hover:bg-blue-700">
+                            保存
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 初始化Lucide图标
+        lucide.createIcons();
+
+        // 当前日期显示
+        document.addEventListener('DOMContentLoaded', function() {
+            const options = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' };
+            const currentDate = new Date().toLocaleDateString('zh-CN', options);
+            document.getElementById('current-date').textContent = currentDate;
+
+            // 初始化图表
+            initCharts();
+            
+            // 加载模拟数据
+            loadMockData();
+            
+            // 显示付款提醒
+            showPaymentReminders();
+            
+            // 设置表单提交事件
+            document.getElementById('add-room-form').addEventListener('submit', handleAddRoom);
+            document.getElementById('add-booking-form').addEventListener('submit', handleAddBooking);
+        });
+
+        // 切换标签页
+        function showTab(tabId) {
+            // 隐藏所有标签页
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.add('hidden');
+            });
+            
+            // 显示选中的标签页
+            document.getElementById(`${tabId}-tab`).classList.remove('hidden');
+            
+            // 更新页面标题
+            const pageTitle = document.getElementById('page-title');
+            switch(tabId) {
+                case 'dashboard':
+                    pageTitle.textContent = '仪表盘';
+                    break;
+                case 'rooms':
+                    pageTitle.textContent = '房源管理';
+                    break;
+                case 'bookings':
+                    pageTitle.textContent = '入住管理';
+                    break;
+                case 'statistics':
+                    pageTitle.textContent = '统计分析';
+                    break;
+                case 'settings':
+                    pageTitle.textContent = '设置';
+                    break;
+            }
+            
+            // 更新导航栏活动状态
+            document.querySelectorAll('nav a').forEach(link => {
+                link.classList.remove('bg-gray-100');
+            });
+            document.querySelector(`a[href="#${tabId}"]`).classList.add('bg-gray-100');
+        }
+
+        // 模态框控制
+        function showAddRoomModal() {
+            document.getElementById('add-room-modal').classList.remove('hidden');
+        }
+
+        function hideAddRoomModal() {
+            document.getElementById('add-room-modal').classList.add('hidden');
+        }
+
+        function showAddBookingModal() {
+            document.getElementById('add-booking-modal').classList.remove('hidden');
+            populateRoomSelect();
+        }
+
+        function hideAddBookingModal() {
+            document.getElementById('add-booking-modal').classList.add('hidden');
+        }
+
+        // 初始化图表
+        function initCharts() {
+            // 收入趋势图
+            const revenueCtx = document.getElementById('revenue-chart').getContext('2d');
+            new Chart(revenueCtx, {
+                type: 'line',
+                data: {
+                    labels: ['1月', '2月', '3月', '4月', '5月', '6月'],
+                    datasets: [{
+                        label: '月收入 (马币)',
+                        data: [12500, 13800, 15200, 14900, 16800, 15280],
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        borderColor: 'rgba(59, 130, 246, 1)',
+                        borderWidth: 2,
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                drawBorder: false
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
+
+            // 房源状态分布图
+            const roomStatusCtx = document.getElementById('room-status-chart').getContext('2d');
+            new Chart(roomStatusCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['空闲', '已预订', '已入住', '维护中'],
+                    datasets: [{
+                        data: [4, 5, 3, 0],
+                        backgroundColor: [
+                            'rgba(34, 197, 94, 0.8)',
+                            'rgba(249, 115, 22, 0.8)',
+                            'rgba(59, 130, 246, 0.8)',
+                            'rgba(156, 163, 175, 0.8)'
+                        ],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    },
+                    cutout: '70%'
+                }
+            });
+
+            // 统计页面图表
+            if (document.getElementById('statistics-revenue-chart')) {
+                const statisticsRevenueCtx = document.getElementById('statistics-revenue-chart').getContext('2d');
+                new Chart(statisticsRevenueCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['1月', '2月', '3月', '4月', '5月', '6月'],
+                        datasets: [{
+                            label: '月收入 (马币)',
+                            data: [12500, 13800, 15200, 14900, 16800, 15280],
+                            backgroundColor: 'rgba(59, 130, 246, 0.8)'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+            }
+
+            if (document.getElementById('occupancy-chart')) {
+                const occupancyCtx = document.getElementById('occupancy-chart').getContext('2d');
+                new Chart(occupancyCtx, {
+                    type: 'line',
+                    data: {
+                        labels: ['1月', '2月', '3月', '4月', '5月', '6月'],
+                        datasets: [{
+                            label: '入住率 (%)',
+                            data: [72, 68, 75, 82, 85, 78],
+                            backgroundColor: 'rgba(249, 115, 22, 0.1)',
+                            borderColor: 'rgba(249, 115, 22, 1)',
+                            borderWidth: 2,
+                            tension: 0.4,
+                            fill: true
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                max: 100
+                            }
+                        }
+                    }
+                });
+            }
+
+            if (document.getElementById('room-type-revenue-chart')) {
+                const roomTypeRevenueCtx = document.getElementById('room-type-revenue-chart').getContext('2d');
+                new Chart(roomTypeRevenueCtx, {
+                    type: 'pie',
+                    data: {
+                        labels: ['单人间', '双人间', '套房'],
+                        datasets: [{
+                            data: [25000, 35000, 25280],
+                            backgroundColor: [
+                                'rgba(59, 130, 246, 0.8)',
+                                'rgba(249, 115, 22, 0.8)',
+                                'rgba(139, 92, 246, 0.8)'
+                            ],
+                            borderWidth: 0
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom'
+                            }
+                        }
+                    }
+                });
+            }
+
+            if (document.getElementById('monthly-bookings-chart')) {
+                const monthlyBookingsCtx = document.getElementById('monthly-bookings-chart').getContext('2d');
+                new Chart(monthlyBookingsCtx, {
+                    type: 'line',
+                    data: {
+                        labels: ['1月', '2月', '3月', '4月', '5月', '6月'],
+                        datasets: [{
+                            label: '预订量',
+                            data: [32, 35, 40, 38, 45, 48],
+                            backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                            borderColor: 'rgba(139, 92, 246, 1)',
+                            borderWidth: 2,
+                            tension: 0.4,
+                            fill: true
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        // 模拟数据
+        const mockRooms = [
+            {
+                id: '1',
+                roomNumber: '101',
+                type: 'suite',
+                price: 580,
+                capacity: 4,
+                amenities: ['wifi', 'aircon', 'tv', 'refrigerator', 'microwave', 'washing-machine', 'hairdryer', 'iron'],
+                status: 'occupied',
+                availableFrom: '2025-07-15',
+                description: '豪华套房，配备独立客厅和厨房，位于一楼，靠近泳池。',
+                image: 'https://p11-doubao-search-sign.byteimg.com/labis/be74c1b09b68e17163e1472facae6d0c~tplv-be4g95zd3a-image.jpeg?rk3s=542c0f93&x-expires=1782410256&x-signature=EAILa3B8AHaZcIOulJsohk7uPZg%3D'
+            },
+            {
+                id: '2',
+                roomNumber: '102',
+                type: 'double',
+                price: 380,
+                capacity: 2,
+                amenities: ['wifi', 'aircon', 'tv', 'refrigerator', 'hairdryer'],
+                status: 'available',
+                availableFrom: '2025-07-01',
+                description: '舒适双人间，位于一楼，靠近入口。',
+                image: 'https://p3-doubao-search-sign.byteimg.com/tos-cn-i-be4g95zd3a/1506691690178019331~tplv-be4g95zd3a-image.jpeg?rk3s=542c0f93&x-expires=1782410256&x-signature=aKmQobuPDqy7UIhI%2Fr0s2Dih1P8%3D'
+            },
+            {
+                id: '3',
+                roomNumber: '103',
+                type: 'single',
+                price: 280,
+                capacity: 1,
+                amenities: ['wifi', 'aircon', 'tv', 'hairdryer'],
+                status: 'available',
+                availableFrom: '2025-07-01',
+                description: '简约单人间，位于一楼，安静舒适。',
+                image: 'https://p3-doubao-search-sign.byteimg.com/ecom-shop-material/jpeg_m_ccdae348e5957e252e0da0a65d8dbea0_sx_1252691_www5024-3328~tplv-be4g95zd3a-image.jpeg?rk3s=542c0f93&x-expires=1782410256&x-signature=TyUdMpZQaEY3fBRTX%2F8DW5USX70%3D'
+            },
+            {
+                id: '4',
+                roomNumber: '201',
+                type: 'suite',
+                price: 620,
+                capacity: 4,
+                amenities: ['wifi', 'aircon', 'tv', 'refrigerator', 'microwave', 'washing-machine', 'hairdryer', 'iron'],
+                status: 'booked',
+                availableFrom: '2025-07-20',
+                description: '豪华套房，配备独立客厅和厨房，位于二楼，享有城市美景。',
+                image: 'https://p11-doubao-search-sign.byteimg.com/labis/5b3ca292e13d311d481107f86770ebe1~tplv-be4g95zd3a-image.jpeg?rk3s=542c0f93&x-expires=1782410256&x-signature=d8P32lYEgSQcrgDK9PjBNHaFvhs%3D'
+            },
+            {
+                id: '5',
+                roomNumber: '202',
+                type: 'double',
+                price: 420,
+                capacity: 2,
+                amenities: ['wifi', 'aircon', 'tv', 'refrigerator', 'microwave', 'hairdryer'],
+                status: 'occupied',
+                availableFrom: '2025-07-10',
+                description: '豪华双人间，位于二楼，享有部分城市景观。',
+                image: 'https://p26-doubao-search-sign.byteimg.com/pgc-image/e19118e374bd4f07a2f98675b7a3eeb5~tplv-be4g95zd3a-image.jpeg?rk3s=542c0f93&x-expires=1782410256&x-signature=dQHAqX0zaOeyBWvsvkhlei%2FasQY%3D'
+            },
+            {
+                id: '6',
+                roomNumber: '203',
+                type: 'double',
+                price: 400,
+                capacity: 2,
+                amenities: ['wifi', 'aircon', 'tv', 'refrigerator', 'hairdryer'],
+                status: 'booked',
+                availableFrom: '2025-07-18',
+                description: '舒适双人间，位于二楼，安静舒适。',
+                image: 'https://p3-doubao-search-sign.byteimg.com/ecom-shop-material/jpeg_m_20376942aa8432a245e0cb323b1fad99_sx_352431_www800-800~tplv-be4g95zd3a-image.jpeg?rk3s=542c0f93&x-expires=1782410256&x-signature=R%2BrMNdF3janPaXK9xMxQ7bV4f3U%3D'
+            },
+            {
+                id: '7',
+                roomNumber: '204',
+                type: 'single',
+                price: 300,
+                capacity: 1,
+                amenities: ['wifi', 'aircon', 'tv', 'hairdryer'],
+                status: 'available',
+                availableFrom: '2025-07-05',
+                description: '简约单人间，位于二楼，安静舒适。',
+                image: 'https://p11-doubao-search-sign.byteimg.com/labis/image/a7c0eaa167bab3df4f60b64bbc5abf48~tplv-be4g95zd3a-image.jpeg?rk3s=542c0f93&x-expires=1782410256&x-signature=bAoNEXRIeaO7hWnWX8FlLf6y064%3D'
+            },
+            {
+                id: '8',
+                roomNumber: '301',
+                type: 'suite',
+                price: 680,
+                capacity: 4,
+                amenities: ['wifi', 'aircon', 'tv', 'refrigerator', 'microwave', 'washing-machine', 'hairdryer', 'iron'],
+                status: 'booked',
+                availableFrom: '2025-07-25',
+                description: '豪华套房，配备独立客厅和厨房，位于三楼，享有全景城市美景。',
+                image: 'https://p11-doubao-search-sign.byteimg.com/labis/37a8a8ccb906caa10f187ecef0d3d4f8~tplv-be4g95zd3a-image.jpeg?rk3s=542c0f93&x-expires=1782410256&x-signature=FRejjVcmHQim2GXuZzSXjdoqJ7I%3D'
+            },
+            {
+                id: '9',
+                roomNumber: '302',
+                type: 'double',
+                price: 450,
+                capacity: 2,
+                amenities: ['wifi', 'aircon', 'tv', 'refrigerator', 'microwave', 'hairdryer'],
+                status: 'booked',
+                availableFrom: '2025-07-15',
+                description: '豪华双人间，位于三楼，享有全景城市景观。',
+                image: 'https://p11-doubao-search-sign.byteimg.com/labis/123e5d0df8a930052ca85a3a4078d447~tplv-be4g95zd3a-image.jpeg?rk3s=542c0f93&x-expires=1782410256&x-signature=93LnnRfVn53eJDRHuTsRzMqclNo%3D'
+            },
+            {
+                id: '10',
+                roomNumber: '303',
+                type: 'double',
+                price: 420,
+                capacity: 2,
+                amenities: ['wifi', 'aircon', 'tv', 'refrigerator', 'hairdryer'],
+                status: 'available',
+                availableFrom: '2025-07-03',
+                description: '舒适双人间，位于三楼，享有部分城市景观。',
+                image: 'https://p3-doubao-search-sign.byteimg.com/tos-cn-i-be4g95zd3a/957003410363777033~tplv-be4g95zd3a-image.jpeg?rk3s=542c0f93&x-expires=1782410256&x-signature=9a1maaYMfPCA0QmY0%2BgQqbJQHyY%3D'
+            },
+            {
+                id: '11',
+                roomNumber: '304',
+                type: 'single',
+                price: 320,
+                capacity: 1,
+                amenities: ['wifi', 'aircon', 'tv', 'hairdryer'],
+                status: 'available',
+                availableFrom: '2025-07-01',
+                description: '豪华单人间，位于三楼，享有城市景观。',
+                image: 'https://p3-doubao-search-sign.byteimg.com/ecom-shop-material/abrERFKx_m_b7b372e5181d10180599654e213115ab_sx_82038_www800-800~tplv-be4g95zd3a-image.jpeg?rk3s=542c0f93&x-expires=1782410256&x-signature=85H4oTHS7%2BYaGDhniXB6Tl3Lkls%3D'
+            },
+            {
+                id: '12',
+                roomNumber: '305',
+                type: 'single',
+                price: 300,
+                capacity: 1,
+                amenities: ['wifi', 'aircon', 'tv', 'hairdryer'],
+                status: 'occupied',
+                availableFrom: '2025-07-12',
+                description: '简约单人间，位于三楼，安静舒适。',
+                image: 'https://p11-doubao-search-sign.byteimg.com/labis/19ce2d89ace6eae64265e52848fcfb1a~tplv-be4g95zd3a-image.jpeg?rk3s=542c0f93&x-expires=1782410256&x-signature=2P58wvhGTfOoVTw9amezrGPlSXo%3D'
+            }
+        ];
+
+        const mockBookings = [
+            {
+                id: 'B001',
+                roomId: '1',
+                roomNumber: '101',
+                roomType: '1室',
+                rentalMode: '整租',
+                roomSize: '',
+                guestName: '张先生',
+                contactNumber: '+86 138-1234-5678',
+                idType: 'passport',
+                idNumber: 'P1234567',
+                checkInDate: '2025-07-05',
+                checkOutDate: '2025-07-10',
+                totalNights: 5,
+                totalPrice: 2900,
+                paymentStatus: 'paid',
+                specialRequests: '需要额外的枕头和被子'
+            },
+            {
+                id: 'B002',
+                roomId: '5',
+                roomNumber: '202',
+                roomType: '2室',
+                rentalMode: '合租',
+                roomSize: 'master',
+                guestName: '李女士',
+                contactNumber: '+86 139-8765-4321',
+                idType: 'id-card',
+                idNumber: '110101199001011234',
+                checkInDate: '2025-07-03',
+                checkOutDate: '2025-07-10',
+                totalNights: 7,
+                totalPrice: 2940,
+                paymentStatus: 'paid',
+                specialRequests: '无'
+            },
+            {
+                id: 'B003',
+                roomId: '12',
+                roomNumber: '305',
+                roomType: '3室',
+                rentalMode: '合租',
+                roomSize: 'large',
+                guestName: '王先生',
+                contactNumber: '+60 12-345-6789',
+                idType: 'passport',
+                idNumber: 'P7654321',
+                checkInDate: '2025-07-06',
+                checkOutDate: '2025-07-12',
+                totalNights: 6,
+                totalPrice: 1800,
+                paymentStatus: 'paid',
+                specialRequests: '希望房间安静，不要靠近电梯'
+            }
+                guestName: '张先生',
+                contactNumber: '+86 138-1234-5678',
+                idType: 'passport',
+                idNumber: 'P1234567',
+                checkInDate: '2025-07-05',
+                checkOutDate: '2025-07-10',
+                totalNights: 5,
+                totalPrice: 2900,
+                paymentStatus: 'paid',
+                specialRequests: '需要额外的枕头和被子'
+            },
+            {
+                id: 'B002',
+                roomId: '5',
+                roomNumber: '202',
+                guestName: '李女士',
+                contactNumber: '+86 139-8765-4321',
+                idType: 'id-card',
+                idNumber: '110101199001011234',
+                checkInDate: '2025-07-03',
+                checkOutDate: '2025-07-10',
+                totalNights: 7,
+                totalPrice: 2940,
+                paymentStatus: 'paid',
+                specialRequests: '无'
+            },
+            {
+                id: 'B003',
+                roomId: '12',
+                roomNumber: '305',
+                guestName: '王先生',
+                contactNumber: '+60 12-345-6789',
+                idType: 'passport',
+                idNumber: 'P7654321',
+                checkInDate: '2025-07-06',
+                checkOutDate: '2025-07-12',
+                totalNights: 6,
+                totalPrice: 1800,
+                paymentStatus: 'paid',
+                specialRequests: '希望房间安静，不要靠近电梯'
+            },
+            {
+                id: 'B004',
+                roomId: '4',
+                roomNumber: '201',
+                guestName: '陈女士',
+                contactNumber: '+86 135-6789-1234',
+                idType: 'passport',
+                idNumber: 'P2345678',
+                checkInDate: '2025-07-15',
+                checkOutDate: '2025-07-20',
+                totalNights: 5,
+                totalPrice: 3100,
+                paymentStatus: 'partial',
+                specialRequests: '需要接机服务'
+            },
+            {
+                id: 'B005',
+                roomId: '6',
+                roomNumber: '203',
+                guestName: '刘先生',
+                contactNumber: '+86 136-5432-9876',
+                idType: 'id-card',
+                idNumber: '310101198505056789',
+                checkInDate: '2025-07-10',
+                checkOutDate: '2025-07-15',
+                totalNights: 5,
+                totalPrice: 2000,
+                paymentStatus: 'unpaid',
+                specialRequests: '无'
+            },
+            {
+                id: 'B006',
+                roomId: '8',
+                roomNumber: '301',
+                guestName: '赵女士',
+                contactNumber: '+60 12-987-6543',
+                idType: 'passport',
+                idNumber: 'P3456789',
+                checkInDate: '2025-07-20',
+                checkOutDate: '2025-07-25',
+                totalNights: 5,
+                totalPrice: 3400,
+                paymentStatus: 'paid',
+                specialRequests: '需要婴儿床'
+            },
+            {
+                id: 'B007',
+                roomId: '9',
+                roomNumber: '302',
+                guestName: '钱先生',
+                contactNumber: '+86 137-1111-2222',
+                idType: 'id-card',
+                idNumber: '440101199203034567',
+                checkInDate: '2025-07-12',
+                checkOutDate: '2025-07-15',
+                totalNights: 3,
+                totalPrice: 1350,
+                paymentStatus: 'paid',
+                specialRequests: '希望有阳台的房间'
+            }
+        ];
+
+        // 加载模拟数据
+        function loadMockData() {
+            // 加载房源列表
+            const roomsContainer = document.getElementById('rooms-container');
+            if (roomsContainer) {
+                roomsContainer.innerHTML = '';
+                mockRooms.forEach(room => {
+                    const roomCard = document.createElement('div');
+                    roomCard.className = 'bg-white rounded-lg shadow-md overflow-hidden';
+                    
+                    // 状态标签颜色
+                    let statusColor = '';
+                    let statusText = '';
+                    switch(room.status) {
+                        case 'available':
+                            statusColor = 'bg-green-500';
+                            statusText = '空闲';
+                            break;
+                        case 'booked':
+                            statusColor = 'bg-orange-500';
+                            statusText = '已预订';
+                            break;
+                        case 'occupied':
+                            statusColor = 'bg-blue-500';
+                            statusText = '已入住';
+                            break;
+                        case 'maintenance':
+                            statusColor = 'bg-gray-500';
+                            statusText = '维护中';
+                            break;
+                    }
+                    
+                    // 房型文本
+                    let typeText = '';
+                    switch(room.type) {
+                        case 'single':
+                            typeText = '单人间';
+                            break;
+                        case 'double':
+                            typeText = '双人间';
+                            break;
+                        case 'suite':
+                            typeText = '套房';
+                            break;
+                    }
+                    
+                    roomCard.innerHTML = `
+                        <div class="relative">
+                            <img src="${room.image || 'https://p3-doubao-search-sign.byteimg.com/tos-cn-i-be4g95zd3a/1506691690178019331~tplv-be4g95zd3a-image.jpeg?rk3s=542c0f93&x-expires=1782410256&x-signature=aKmQobuPDqy7UIhI%2Fr0s2Dih1P8%3D'}" alt="房间图片" class="w-full h-48 object-cover">
+                            <div class="absolute top-2 right-2">
+                                <span class="${statusColor} text-white text-xs px-2 py-1 rounded-full">${statusText}</span>
+                            </div>
+                        </div>
+                        <div class="p-4">
+                            <div class="flex justify-between items-center mb-2">
+                                <h3 class="text-lg font-semibold text-gray-800">${room.number || room.roomNumber} - ${typeText}</h3>
+                                <span class="text-lg font-bold text-blue-600">¥${room.price}/晚</span>
+                            </div>
+                            <p class="text-gray-600 text-sm mb-3">${room.description}</p>
+                            <div class="flex items-center text-sm text-gray-500 mb-3">
+                                <i data-lucide="users" class="w-4 h-4 mr-1"></i>
+                                <span>可容纳 ${room.capacity} 人</span>
+                            </div>
+                            <div class="flex flex-wrap gap-1 mb-4">
+                                ${room.amenities.map(amenity => {
+                                    let amenityText = '';
+                                    switch(amenity) {
+                                        case 'wifi': amenityText = 'WiFi'; break;
+                                        case 'aircon': amenityText = '空调'; break;
+                                        case 'tv': amenityText = '电视'; break;
+                                        case 'refrigerator': amenityText = '冰箱'; break;
+                                        case 'microwave': amenityText = '微波炉'; break;
+                                        case 'washing-machine': amenityText = '洗衣机'; break;
+                                        case 'hairdryer': amenityText = '吹风机'; break;
+                                        case 'iron': amenityText = '熨斗'; break;
+                                    }
+                                    return `<span class="bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded">${amenityText}</span>`;
+                                }).join('')}
+                            </div>
+                            <div class="flex justify-between">
+                                <button class="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center" onclick="showRoomDetails('${room.id}')">
+                                    <i data-lucide="eye" class="w-4 h-4 mr-1"></i>
+                                    查看详情
+                                </button>
+                                <button class="text-green-600 hover:text-green-800 text-sm font-medium flex items-center" onclick="shareRoom('${room.id}')">
+                                    <i data-lucide="share" class="w-4 h-4 mr-1"></i>
+                                    分享
+                                </button>
+                                <button class="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center" onclick="editRoom('${room.id}')">
+                                    <i data-lucide="edit" class="w-4 h-4 mr-1"></i>
+                                    编辑
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    roomsContainer.appendChild(roomCard);
+                });
+                
+                // 重新渲染图标
+                lucide.createIcons();
+            }
+            
+            // 为预订表单添加房间大小选择逻辑
+            const bookingRentalModeSelect = document.querySelector('#add-booking-form select[name="rentalMode"]');
+            const bookingRoomSizeDiv = document.getElementById('roomSizeDiv');
+            const bookingRoomSelect = document.querySelector('#add-booking-form select[name="roomId"]');
+            
+            if (bookingRentalModeSelect && bookingRoomSizeDiv && bookingRoomSelect) {
+                // 监听租赁模式变化
+                bookingRentalModeSelect.addEventListener('change', function() {
+                    const roomSizeSelect = bookingRoomSizeDiv.querySelector('select[name="roomSize"]');
+                    
+                    if (this.value === '合租') {
+                        bookingRoomSizeDiv.classList.remove('hidden');
+                        // 根据选择的房号更新房间大小选项
+                        updateBookingRoomSizeOptions();
+                    } else {
+                        bookingRoomSizeDiv.classList.add('hidden');
+                    }
+                });
+                
+                // 监听房号变化
+                bookingRoomSelect.addEventListener('change', function() {
+                    if (bookingRentalModeSelect.value === '合租') {
+                        updateBookingRoomSizeOptions();
+                    }
+                });
+                
+                // 更新预订表单房间大小选项的函数
+                function updateBookingRoomSizeOptions() {
+                    const selectedRoomOption = bookingRoomSelect.options[bookingRoomSelect.selectedIndex];
+                    const roomType = selectedRoomOption ? selectedRoomOption.dataset.roomType : '';
+                    const roomSizeSelect = bookingRoomSizeDiv.querySelector('select[name="roomSize"]');
+                    
+                    roomSizeSelect.innerHTML = '<option value="">请选择房间大小</option>';
+                    
+                    if (!roomType) return;
+                    
+                    if (roomType === '2-bedroom') {
+                        // 2室合租：主卧、次卧
+                        const masterOption = document.createElement('option');
+                        masterOption.value = 'master';
+                        masterOption.textContent = '主卧';
+                        roomSizeSelect.appendChild(masterOption);
+                        
+                        const secondOption = document.createElement('option');
+                        secondOption.value = 'second';
+                        secondOption.textContent = '次卧';
+                        roomSizeSelect.appendChild(secondOption);
+                    } else if (roomType === '3-bedroom') {
+                        // 3室合租：大房、中房、小房
+                        const largeOption = document.createElement('option');
+                        largeOption.value = 'large';
+                        largeOption.textContent = '大房';
+                        roomSizeSelect.appendChild(largeOption);
+                        
+                        const mediumOption = document.createElement('option');
+                        mediumOption.value = 'medium';
+                        mediumOption.textContent = '中房';
+                        roomSizeSelect.appendChild(mediumOption);
+                        
+                        const smallOption = document.createElement('option');
+                        smallOption.value = 'small';
+                        smallOption.textContent = '小房';
+                        roomSizeSelect.appendChild(smallOption);
+                    }
+                }
+            }
+            
+            // 加载预订列表
+            const bookingsContainer = document.getElementById('bookings-container');
+            if (bookingsContainer) {
+                bookingsContainer.innerHTML = '';
+                mockBookings.forEach(booking => {
+                    const row = document.createElement('tr');
+                    
+                    // 支付状态标签颜色
+                    let paymentColor = '';
+                    let paymentText = '';
+                    switch(booking.paymentStatus) {
+                        case 'paid':
+                            paymentColor = 'bg-green-100 text-green-800';
+                            paymentText = '已支付';
+                            break;
+                        case 'partial':
+                            paymentColor = 'bg-yellow-100 text-yellow-800';
+                            paymentText = '部分支付';
+                            break;
+                        case 'unpaid':
+                            paymentColor = 'bg-red-100 text-red-800';
+                            paymentText = '未支付';
+                            break;
+                    }
+                    
+                    // 预订状态
+                    let bookingStatus = '';
+                    const today = new Date();
+                    const checkInDate = new Date(booking.checkInDate);
+                    const checkOutDate = new Date(booking.checkOutDate);
+                    
+                    if (today < checkInDate) {
+                        bookingStatus = '<span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">即将入住</span>';
+                    } else if (today >= checkInDate && today <= checkOutDate) {
+                        bookingStatus = '<span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">当前入住</span>';
+                    } else {
+                        bookingStatus = '<span class="bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded-full">已完成</span>';
+                    }
+                    
+                    row.innerHTML = `
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm font-medium text-gray-900">${booking.id}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">${booking.roomNumber}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">${booking.roomType}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${booking.rentalMode === '整租' ? 'bg-blue-100 text-blue-800' : 'bg-orange-100 text-orange-800'}">
+                                ${booking.rentalMode}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">
+                                ${(() => {
+                                    if (booking.rentalMode !== '合租') return '-';
+                                    if (booking.roomType === '2室' && booking.roomSize === 'master') return '主卧';
+                                    if (booking.roomType === '2室' && booking.roomSize === 'second') return '次卧';
+                                    if (booking.roomType === '3室' && booking.roomSize === 'large') return '大房';
+                                    if (booking.roomType === '3室' && booking.roomSize === 'medium') return '中房';
+                                    if (booking.roomType === '3室' && booking.roomSize === 'small') return '小房';
+                                    return booking.roomSize;
+                                })()}
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">${booking.guestName}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">${booking.contactNumber}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">${formatDate(booking.checkInDate)}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">${formatDate(booking.checkOutDate)}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">${booking.totalNights}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm font-medium text-gray-900">¥${booking.totalPrice}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                ${bookingStatus}
+                                <span class="ml-2 ${paymentColor} text-xs px-2 py-1 rounded-full">${paymentText}</span>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <div class="flex space-x-2">
+                                <button class="text-blue-600 hover:text-blue-800" onclick="viewBooking('${booking.id}')">
+                                    <i data-lucide="eye" class="w-4 h-4"></i>
+                                </button>
+                                <button class="text-blue-600 hover:text-blue-800" onclick="editBooking('${booking.id}')">
+                                    <i data-lucide="edit" class="w-4 h-4"></i>
+                                </button>
+                                <button class="text-red-600 hover:text-red-800" onclick="cancelBooking('${booking.id}')">
+                                    <i data-lucide="x-circle" class="w-4 h-4"></i>
+                                </button>
+                            </div>
+                        </td>
+                    `;
+                    bookingsContainer.appendChild(row);
+                });
+                
+                // 重新渲染图标
+                lucide.createIcons();
+            }
+            
+            // 加载最近预订
+            const recentBookingsContainer = document.getElementById('recent-bookings');
+            if (recentBookingsContainer) {
+                recentBookingsContainer.innerHTML = '';
+                const recentBookings = mockBookings.slice(0, 5);
+                
+                recentBookings.forEach(booking => {
+                    const row = document.createElement('tr');
+                    
+                    // 预订状态
+                    let statusColor = '';
+                    let statusText = '';
+                    const today = new Date();
+                    const checkInDate = new Date(booking.checkInDate);
+                    const checkOutDate = new Date(booking.checkOutDate);
+                    
+                    if (today < checkInDate) {
+                        statusColor = 'bg-blue-100 text-blue-800';
+                        statusText = '即将入住';
+                    } else if (today >= checkInDate && today <= checkOutDate) {
+                        statusColor = 'bg-green-100 text-green-800';
+                        statusText = '当前入住';
+                    } else {
+                        statusColor = 'bg-gray-100 text-gray-800';
+                        statusText = '已完成';
+                    }
+                    
+                    row.innerHTML = `
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm font-medium text-gray-900">${booking.id}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div>
+                                <div class="text-sm text-gray-900">${booking.roomNumber}</div>
+                                <div class="text-xs text-gray-500">${booking.roomType}</div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${booking.rentalMode === '整租' ? 'bg-blue-100 text-blue-800' : 'bg-orange-100 text-orange-800'}">
+                                ${booking.rentalMode}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">
+                                ${(() => {
+                                    if (booking.rentalMode !== '合租') return '-';
+                                    if (booking.roomType === '2室' && booking.roomSize === 'master') return '主卧';
+                                    if (booking.roomType === '2室' && booking.roomSize === 'second') return '次卧';
+                                    if (booking.roomType === '3室' && booking.roomSize === 'large') return '大房';
+                                    if (booking.roomType === '3室' && booking.roomSize === 'medium') return '中房';
+                                    if (booking.roomType === '3室' && booking.roomSize === 'small') return '小房';
+                                    return booking.roomSize;
+                                })()}
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">${booking.guestName}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">${formatDate(booking.checkInDate)}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">${formatDate(booking.checkOutDate)}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="${statusColor} text-xs px-2 py-1 rounded-full">${statusText}</span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                            ¥${booking.totalPrice}
+                        </td>
+                    `;
+                    recentBookingsContainer.appendChild(row);
+                });
+            }
+        }
+
+        // 辅助函数 - 格式化日期
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('zh-CN');
+        }
+
+        // 辅助函数 - 填充房号选择框
+        function populateRoomSelect() {
+            const roomSelect = document.querySelector('select[name="roomId"]');
+            if (roomSelect) {
+                roomSelect.innerHTML = '<option value="">请选择房号</option>';
+                
+                mockRooms.forEach(room => {
+                    if (room.status === 'available') {
+                        const option = document.createElement('option');
+                        option.value = room.id;
+                        option.textContent = `${room.roomNumber} - ${getRoomTypeText(room.type)} (¥${room.price}/晚)`;
+                        option.dataset.roomType = room.type;
+                        roomSelect.appendChild(option);
+                    }
+                });
+            }
+        }
+
+        // 辅助函数 - 获取房型文本
+        function getRoomTypeText(type) {
+            switch(type) {
+                case '1-bedroom': return '1室';
+                case '2-bedroom': return '2室';
+                case '3-bedroom': return '3室';
+                default: return type;
+            }
+        }
+        
+        // 辅助函数 - 获取房间大小文本
+        function getRoomSizeText(size) {
+            switch(size) {
+                case 'master': return '主卧';
+                case 'second': return '次卧';
+                case 'large': return '大房';
+                case 'medium': return '中房';
+                case 'small': return '小房';
+                default: return size;
+            }
+        }
+
+        // 预订管理相关函数
+        function viewBooking(id) {
+            alert('查看预订详情: ' + id);
+        }
+
+        function editBooking(id) {
+            alert('编辑预订: ' + id);
+        }
+
+        function cancelBooking(id) {
+            if (confirm('确定要取消这个预订吗？')) {
+                alert('预订已取消: ' + id);
+            }
+        }
+
+        // 房源管理相关函数
+        function showRoomDetails(id) {
+            alert('查看房源详情: ' + id);
+        }
+
+        function shareRoom(id) {
+            alert('分享房源: ' + id);
+        }
+
+        function editRoom(id) {
+            alert('编辑房源: ' + id);
+        }
+
+        // 处理添加房源表单提交
+        function handleAddRoom(event) {
+            event.preventDefault();
+            
+            // 获取表单数据
+            const formData = new FormData(event.target);
+            const roomData = {
+                id: Date.now().toString(),
+                number: formData.get('roomNumber'),
+                type: formData.get('type') === '1-bedroom' ? '1室' : formData.get('type') === '2-bedroom' ? '2室' : '3室',
+                size: formData.get('roomArea') || '45m²',
+                price: parseInt(formData.get('price')),
+                capacity: parseInt(formData.get('capacity')),
+                amenities: formData.getAll('amenities'),
+                status: formData.get('status'),
+                availableFrom: formData.get('availableFrom'),
+                description: formData.get('description'),
+                images: [],
+                videos: [],
+                image: 'https://p3-doubao-search-sign.byteimg.com/tos-cn-i-be4g95zd3a/1506691690178019331~tplv-be4g95zd3a-image.jpeg?rk3s=542c0f93&x-expires=1782410256&x-signature=aKmQobuPDqy7UIhI%2Fr0s2Dih1P8%3D' // 默认图片
+            };
+            
+            // 添加到模拟数据
+            mockRooms.push(roomData);
+            
+            // 重新加载房源列表
+            loadMockData();
+            
+            // 重置表单并关闭模态框
+            event.target.reset();
+            hideAddRoomModal();
+            
+            // 显示成功消息
+            alert('房源添加成功！');
+        }
+
+        // 处理添加预订表单提交
+        function handleAddBooking(event) {
+            event.preventDefault();
+            
+            // 获取表单数据
+            const formData = new FormData(event.target);
+            
+            // 获取选中的房间信息
+            const roomId = formData.get('roomId');
+            const selectedRoom = mockRooms.find(room => room.id == roomId);
+            
+            if (!selectedRoom) {
+                alert('请选择有效的房间！');
+                return;
+            }
+            
+            const rentalMode = formData.get('rentalMode');
+            const roomSize = formData.get('roomSize');
+            
+            // 计算价格
+            let price = selectedRoom.price;
+            if (rentalMode === '合租') {
+                // 根据房间大小调整价格
+                switch(roomSize) {
+                    case '主卧':
+                    case '大房':
+                        price = Math.round(selectedRoom.price * 0.6);
+                        break;
+                    case '次卧':
+                    case '中房':
+                        price = Math.round(selectedRoom.price * 0.5);
+                        break;
+                    case '小房':
+                        price = Math.round(selectedRoom.price * 0.4);
+                        break;
+                }
+            }
+            
+            // 计算晚数和总价
+            const checkInDate = new Date(formData.get('checkInDate'));
+            const checkOutDate = new Date(formData.get('checkOutDate'));
+            const diffTime = Math.abs(checkOutDate - checkInDate);
+            const totalNights = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            const totalPrice = totalNights * price;
+            
+            // 创建预订数据
+            const bookingData = {
+                id: 'B' + Date.now().toString().slice(-6),
+                roomId: selectedRoom.id,
+                roomNumber: selectedRoom.number,
+                roomType: selectedRoom.type,
+                rentalMode: rentalMode,
+                roomSize: roomSize || 'N/A',
+                guestName: formData.get('guestName'),
+                contactNumber: formData.get('contactNumber'),
+                idType: formData.get('idType'),
+                idNumber: formData.get('idNumber'),
+                checkInDate: formData.get('checkInDate'),
+                checkOutDate: formData.get('checkOutDate'),
+                totalNights: totalNights,
+                totalPrice: totalPrice,
+                deposit: parseInt(formData.get('deposit')) || 0,
+                paymentMethod: formData.get('paymentMethod'),
+                paymentStatus: formData.get('paymentStatus'),
+                specialRequests: formData.get('specialRequests') || '无',
+                nextPaymentDate: formData.get('paymentMethod') === 'monthly' ? calculateNextPaymentDate(formData.get('checkInDate')) : null
+            };
+            
+            // 添加到模拟数据
+            mockBookings.push(bookingData);
+            
+            // 更新房间状态
+            selectedRoom.status = 'booked';
+            
+            // 重新加载数据
+            loadMockData();
+            
+            // 重置表单并关闭模态框
+            event.target.reset();
+            hideAddBookingModal();
+            
+            // 显示成功消息
+            alert('预订添加成功！');
+        }
+
+        // 详情页面模态框
+        const roomDetailModal = document.createElement('div');
+        roomDetailModal.id = 'room-detail-modal';
+        roomDetailModal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden';
+        roomDetailModal.innerHTML = `
+            <div class="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+                <div class="flex items-center justify-between p-6 border-b border-gray-200">
+                    <h3 class="text-xl font-semibold text-gray-900" id="detail-title">房源详情</h3>
+                    <button onclick="hideRoomDetailModal()" class="text-gray-400 hover:text-gray-500">
+                        <i data-lucide="x" class="w-6 h-6"></i>
+                    </button>
+                </div>
+                <div class="p-6" id="detail-content">
+                    <!-- 详情内容将通过JavaScript动态填充 -->
+                </div>
+            </div>
+        `;
+        document.body.appendChild(roomDetailModal);
+
+        // 分享模态框
+        const shareModal = document.createElement('div');
+        shareModal.id = 'share-modal';
+        shareModal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden';
+        shareModal.innerHTML = `
+            <div class="bg-white rounded-lg shadow-xl w-full max-w-md">
+                <div class="flex items-center justify-between p-6 border-b border-gray-200">
+                    <h3 class="text-lg font-semibold text-gray-900">分享房源</h3>
+                    <button onclick="hideShareModal()" class="text-gray-400 hover:text-gray-500">
+                        <i data-lucide="x" class="w-6 h-6"></i>
+                    </button>
+                </div>
+                <div class="p-6">
+                    <p class="text-sm text-gray-600 mb-4">复制以下链接分享给客户：</p>
+                    <div class="flex mb-4">
+                        <input type="text" id="share-link" class="flex-1 border border-gray-300 rounded-l-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" readonly>
+                        <button onclick="copyShareLink()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-r-md">
+                            <i data-lucide="copy" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+                    <div class="flex justify-center space-x-4">
+                        <button class="bg-blue-600 hover:bg-blue-700 text-white p-2 rounded-full">
+                            <i data-lucide="message-circle" class="w-5 h-5"></i>
+                        </button>
+                        <button class="bg-green-600 hover:bg-green-700 text-white p-2 rounded-full">
+                            <i data-lucide="smartphone" class="w-5 h-5"></i>
+                        </button>
+                        <button class="bg-blue-800 hover:bg-blue-900 text-white p-2 rounded-full">
+                            <i data-lucide="mail" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(shareModal);
+
+        // 功能函数
+        function showRoomDetails(roomId) {
+            const room = mockRooms.find(r => r.id === roomId);
+            if (!room) return;
+
+            const detailTitle = document.getElementById('detail-title');
+            const detailContent = document.getElementById('detail-content');
+
+            detailTitle.textContent = `${room.roomNumber} - ${getRoomTypeText(room.type)}`;
+
+            // 构建详情内容
+            let content = `
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <div>
+                        <div class="relative h-64 rounded-lg overflow-hidden mb-4">
+                            <img src="${room.image}" alt="房源图片" class="w-full h-full object-cover">
+                        </div>
+                        ${room.videoUrl ? `
+                            <div class="mt-4">
+                                <h4 class="text-sm font-medium text-gray-700 mb-2">房源视频</h4>
+                                <div class="aspect-w-16 aspect-h-9 bg-gray-100 rounded-lg flex items-center justify-center">
+                                    <a href="${room.videoUrl}" target="_blank" class="flex items-center text-blue-600 hover:text-blue-800">
+                                        <i data-lucide="play-circle" class="w-8 h-8 mr-2"></i>
+                                        <span>播放视频</span>
+                                    </a>
+                                </div>
+                            </div>
+                        ` : ''}
+                    </div>
+                    <div>
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <h4 class="text-lg font-semibold text-gray-800 mb-3">基本信息</h4>
+                            <div class="space-y-3">
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">房源编号:</span>
+                                    <span class="font-medium">${room.roomNumber}</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">房型:</span>
+                                    <span class="font-medium">${getRoomTypeText(room.type)}</span>
+                                </div>
+
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">价格:</span>
+                                    <span class="font-bold text-blue-600">¥${room.price}/晚</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">可容纳人数:</span>
+                                    <span class="font-medium">${room.capacity} 人</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">状态:</span>
+                                    <span class="font-medium">${getStatusText(room.status)}</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">可入住日期:</span>
+                                    <span class="font-medium">${formatDate(room.availableFrom)}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-6">
+                    <h4 class="text-lg font-semibold text-gray-800 mb-3">房源描述</h4>
+                    <p class="text-gray-600">${room.description}</p>
+                </div>
+
+                <div class="mb-6">
+                    <h4 class="text-lg font-semibold text-gray-800 mb-3">配套设施</h4>
+                    <div class="flex flex-wrap gap-2">
+                        ${room.amenities.map(amenity => {
+                            let amenityText = '';
+                            switch(amenity) {
+                                case 'wifi': amenityText = 'WiFi'; break;
+                                case 'aircon': amenityText = '空调'; break;
+                                case 'tv': amenityText = '电视'; break;
+                                case 'refrigerator': amenityText = '冰箱'; break;
+                                case 'microwave': amenityText = '微波炉'; break;
+                                case 'washing-machine': amenityText = '洗衣机'; break;
+                                case 'hairdryer': amenityText = '吹风机'; break;
+                                case 'iron': amenityText = '熨斗'; break;
+                            }
+                            return `<span class="bg-gray-100 text-gray-600 px-3 py-1 rounded-full text-sm">${amenityText}</span>`;
+                        }).join('')}
+                    </div>
+                </div>
+
+                <div class="mb-6">
+                    <h4 class="text-lg font-semibold text-gray-800 mb-3">预订日历</h4>
+                    <div class="bg-white border border-gray-200 rounded-lg p-4" id="booking-calendar">
+                        <!-- 日历将通过JavaScript动态生成 -->
+                    </div>
+                </div>
+
+                <div class="flex justify-end space-x-3">
+                    <button onclick="hideRoomDetailModal()" class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">
+                        关闭
+                    </button>
+                    <button onclick="bookRoomFromDetail('${room.id}')" class="px-4 py-2 bg-blue-600 border border-transparent rounded-md text-sm font-medium text-white hover:bg-blue-700">
+                        立即预订
+                    </button>
+                </div>
+            `;
+
+            detailContent.innerHTML = content;
+            
+            // 生成日历
+            generateBookingCalendar(roomId);
+            
+            // 显示模态框
+            document.getElementById('room-detail-modal').classList.remove('hidden');
+            
+            // 重新渲染图标
+            lucide.createIcons();
+        }
+
+        function hideRoomDetailModal() {
+            document.getElementById('room-detail-modal').classList.add('hidden');
+        }
+
+        function shareRoom(roomId) {
+            const room = mockRooms.find(r => r.id === roomId);
+            if (!room) return;
+
+            const shareLink = document.getElementById('share-link');
+            // 生成分享链接（实际应用中应该是真实的分享链接）
+            const link = `https://klhomestay.com/share/${room.id}`;
+            shareLink.value = link;
+
+            document.getElementById('share-modal').classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function hideShareModal() {
+            document.getElementById('share-modal').classList.add('hidden');
+        }
+
+        function copyShareLink() {
+            const shareLink = document.getElementById('share-link');
+            shareLink.select();
+            document.execCommand('copy');
+            
+            // 显示复制成功提示
+            const button = shareLink.nextElementSibling;
+            const originalContent = button.innerHTML;
+            button.innerHTML = '<i data-lucide="check" class="w-5 h-5"></i>';
+            button.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+            button.classList.add('bg-green-600', 'hover:bg-green-700');
+            
+            setTimeout(() => {
+                button.innerHTML = originalContent;
+                button.classList.remove('bg-green-600', 'hover:bg-green-700');
+                button.classList.add('bg-blue-600', 'hover:bg-blue-700');
+                lucide.createIcons();
+            }, 2000);
+        }
+
+        function editRoom(roomId) {
+            alert(`编辑房间 ${roomId}`);
+        }
+
+        function viewBooking(bookingId) {
+            alert(`查看预订 ${bookingId} 详情`);
+        }
+
+        function editBooking(bookingId) {
+            alert(`编辑预订 ${bookingId}`);
+        }
+
+        function cancelBooking(bookingId) {
+            if (confirm(`确定要取消预订 ${bookingId} 吗？`)) {
+                alert(`预订 ${bookingId} 已取消`);
+            }
+        }
+
+        function bookRoomFromDetail(roomId) {
+            hideRoomDetailModal();
+            showAddBookingModal();
+            
+            // 自动选择当前房源
+            const roomSelect = document.querySelector('select[name="roomId"]');
+            if (roomSelect) {
+                roomSelect.value = roomId;
+            }
+        }
+
+        // 生成预订日历
+        function generateBookingCalendar(roomId) {
+            const calendarContainer = document.getElementById('booking-calendar');
+            if (!calendarContainer) return;
+
+            const room = mockRooms.find(r => r.id === roomId);
+            if (!room) return;
+
+            // 获取当前月份的预订情况
+            const today = new Date();
+            const currentMonth = today.getMonth();
+            const currentYear = today.getFullYear();
+
+            // 生成日历头部
+            const monthNames = ['一月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月', '十二月'];
+            let calendarHTML = `
+                <div class="flex justify-between items-center mb-4">
+                    <h5 class="text-md font-medium">${monthNames[currentMonth]} ${currentYear}</h5>
+                    <div class="flex space-x-2">
+                        <button class="p-1 rounded hover:bg-gray-100">
+                            <i data-lucide="chevron-left" class="w-5 h-5"></i>
+                        </button>
+                        <button class="p-1 rounded hover:bg-gray-100">
+                            <i data-lucide="chevron-right" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            // 生成星期标题
+            const weekDays = ['日', '一', '二', '三', '四', '五', '六'];
+            calendarHTML += '<div class="grid grid-cols-7 gap-1 mb-1">';
+            weekDays.forEach(day => {
+                calendarHTML += `<div class="text-center text-xs font-medium text-gray-500 py-2">${day}</div>`;
+            });
+            calendarHTML += '</div>';
+
+            // 获取当月第一天是星期几
+            const firstDay = new Date(currentYear, currentMonth, 1).getDay();
+            
+            // 获取当月的天数
+            const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+
+            // 生成日历格子
+            calendarHTML += '<div class="grid grid-cols-7 gap-1">';
+            
+            // 添加上个月的占位天数
+            for (let i = 0; i < firstDay; i++) {
+                calendarHTML += '<div class="h-10 border border-gray-100 rounded bg-gray-50"></div>';
+            }
+
+            // 生成当月的天数格子
+            for (let day = 1; day <= daysInMonth; day++) {
+                const currentDate = new Date(currentYear, currentMonth, day);
+                const dateStr = currentDate.toISOString().split('T')[0];
+                
+                // 检查是否是今天
+                const isToday = currentDate.toDateString() === today.toDateString();
+                
+                // 检查是否有预订
+                const hasBooking = mockBookings.some(booking => {
+                    if (booking.roomId !== roomId) return false;
+                    
+                    const checkIn = new Date(booking.checkInDate);
+                    const checkOut = new Date(booking.checkOutDate);
+                    
+                    return currentDate >= checkIn && currentDate < checkOut;
+                });
+
+                // 设置格子样式
+                let cellClass = 'h-10 border rounded flex items-center justify-center text-sm';
+                let cellContent = day;
+                
+                if (isToday) {
+                    cellClass += ' bg-blue-100 border-blue-300 font-medium';
+                }
+                
+                if (hasBooking) {
+                    cellClass += ' bg-red-100 border-red-300 text-red-800';
+                    cellContent = `<span class="text-xs">已预订</span>`;
+                } else if (currentDate < today) {
+                    cellClass += ' bg-gray-50 text-gray-400';
+                } else {
+                    cellClass += ' hover:bg-green-50 cursor-pointer';
+                }
+
+                calendarHTML += `<div class="${cellClass}">${cellContent}</div>`;
+            }
+
+            calendarHTML += '</div>';
+
+            // 添加图例
+            calendarHTML += `
+                <div class="flex items-center justify-center space-x-6 mt-4 text-xs text-gray-600">
+                    <div class="flex items-center">
+                        <div class="w-4 h-4 bg-blue-100 border border-blue-300 rounded mr-1"></div>
+                        <span>今天</span>
+                    </div>
+                    <div class="flex items-center">
+                        <div class="w-4 h-4 bg-green-50 border border-gray-200 rounded mr-1"></div>
+                        <span>可预订</span>
+                    </div>
+                    <div class="flex items-center">
+                        <div class="w-4 h-4 bg-red-100 border border-red-300 rounded mr-1"></div>
+                        <span>已预订</span>
+                    </div>
+                    <div class="flex items-center">
+                        <div class="w-4 h-4 bg-gray-50 border border-gray-200 rounded mr-1"></div>
+                        <span>已过期</span>
+                    </div>
+                </div>
+            `;
+
+            calendarContainer.innerHTML = calendarHTML;
+            lucide.createIcons();
+        }
+
+        // 辅助函数 - 获取状态文本
+        function getStatusText(status) {
+            switch(status) {
+                case 'available': return '空闲';
+                case 'booked': return '已预订';
+                case 'occupied': return '已入住';
+                case 'maintenance': return '维护中';
+                default: return status;
+            }
+        }
+        
+        // 计算下次付款日期
+        function calculateNextPaymentDate(checkInDate) {
+            const date = new Date(checkInDate);
+            date.setMonth(date.getMonth() + 1);
+            return date.toISOString().split('T')[0];
+        }
+        
+        // 检查付款到期提醒
+        function checkPaymentReminders() {
+            const today = new Date();
+            const sevenDaysLater = new Date();
+            sevenDaysLater.setDate(today.getDate() + 7);
+            
+            const reminders = [];
+            
+            mockBookings.forEach(booking => {
+                if (booking.paymentMethod === 'monthly' && booking.nextPaymentDate) {
+                    const nextPayment = new Date(booking.nextPaymentDate);
+                    
+                    // 检查是否在7天内到期
+                    if (nextPayment >= today && nextPayment <= sevenDaysLater) {
+                        reminders.push({
+                            bookingId: booking.id,
+                            guestName: booking.guestName,
+                            roomNumber: booking.roomNumber,
+                            nextPaymentDate: booking.nextPaymentDate,
+                            daysRemaining: Math.ceil((nextPayment - today) / (1000 * 60 * 60 * 24))
+                        });
+                    }
+                }
+            });
+            
+            return reminders;
+        }
+        
+        // 显示付款提醒
+        function showPaymentReminders() {
+            const reminders = checkPaymentReminders();
+            
+            if (reminders.length > 0) {
+                let reminderHTML = `
+                    <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4">
+                        <div class="flex">
+                            <div class="flex-shrink-0">
+                                <i data-lucide="alert-triangle" class="w-5 h-5 text-yellow-400"></i>
+                            </div>
+                            <div class="ml-3">
+                                <p class="text-sm text-yellow-700 font-medium">有 ${reminders.length} 个付款即将到期</p>
+                                <ul class="mt-2 text-sm text-yellow-600 list-disc pl-5">
+                `;
+                
+                reminders.forEach(reminder => {
+                    reminderHTML += `
+                        <li>
+                            ${reminder.guestName} (${reminder.roomNumber}) - 
+                            ${formatDate(reminder.nextPaymentDate)} (还有 ${reminder.daysRemaining} 天)
+                        </li>
+                    `;
+                });
+                
+                reminderHTML += `
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                // 将提醒添加到仪表盘顶部
+                const dashboardTab = document.getElementById('dashboard-tab');
+                if (dashboardTab) {
+                    const welcomeCard = dashboardTab.querySelector('.mb-6.bg-white');
+                    welcomeCard.insertAdjacentHTML('beforebegin', reminderHTML);
+                }
+                
+                // 更新通知图标
+                const bellIcon = document.querySelector('[data-lucide="bell"]').parentElement;
+                if (bellIcon) {
+                    const badge = bellIcon.querySelector('span');
+                    if (badge) {
+                        badge.textContent = reminders.length;
+                        badge.classList.add('flex', 'items-center', 'justify-center', 'text-xs');
+                    }
+                }
+            }
+            
+            // 重新渲染图标
+            lucide.createIcons();
+        }
+    </script>
+
+</body></html>
